@@ -9,9 +9,6 @@ package com.salesforce.einsteinbot.sdk.util;
 
 import static com.salesforce.einsteinbot.sdk.util.UtilFunctions.maskAuthorizationHeader;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.function.Function;
 
 import com.salesforce.einsteinbot.sdk.model.Error;
@@ -37,14 +34,6 @@ import reactor.core.publisher.Mono;
 public class WebClientUtil {
 
   private static final Logger logger = LoggerFactory.getLogger(WebClientUtil.class);
-
-  private static final Map<Integer, String> STATUS_CODE_TO_ERROR_MESSAGE = createStatusCodeToErrorMessageMap();
-
-  private static Map<Integer, String> createStatusCodeToErrorMessageMap() {
-    Map<Integer, String> map = new HashMap<>();
-    map.put(429, "Too many requests");
-    return Collections.unmodifiableMap(map);
-  }
   
   public static Mono<ClientRequest> createLoggingRequestProcessor(ClientRequest clientRequest) {
     logger.info("Making {} Request to URI {} with Headers : {}", clientRequest.method(),
@@ -86,24 +75,14 @@ public class WebClientUtil {
   }
 
   private static Mono<Error> buildErrorFromClientResponseBodyString(ReactiveHttpInputMessage clientResponse, BodyExtractor.Context context) {
-    ClientHttpResponse response = (ClientHttpResponse) clientResponse;
+     ClientHttpResponse response = (ClientHttpResponse) clientResponse;
     Mono<String> bodyString = BodyExtractors.toMono(String.class).
             extract(clientResponse, context);
-     return bodyString.map(errorMessage -> {
-      Integer statusCode = response.getRawStatusCode();
-      String finalErrorMessage = errorMessage;
-
-      // Add relevant message with the associated error code 
-      if (statusCode != null && STATUS_CODE_TO_ERROR_MESSAGE.containsKey(statusCode)) {
-        finalErrorMessage = STATUS_CODE_TO_ERROR_MESSAGE.get(statusCode);
-      }
-      
-      return new Error()
-          .status(statusCode)
-          .message("This Response content type is not 'application/json', " +
-                  "See the 'error' field for actual error returned by the server.")
-          .error(finalErrorMessage);
-    });
+    return bodyString.map(errorMessage -> new Error()
+            .status(response.getRawStatusCode())
+            .message("This Response content type is not 'application/json', " +
+                    "See the 'error' field for actual error returned by the server.")
+            .error(errorMessage));
   }
 }
 
