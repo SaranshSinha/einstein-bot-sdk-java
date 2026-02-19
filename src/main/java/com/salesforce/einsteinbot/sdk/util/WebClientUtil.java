@@ -92,7 +92,8 @@ public class WebClientUtil {
      return bodyString.map(errorMessage -> {
       Integer statusCode = response.getRawStatusCode();
       String finalErrorMessage = errorMessage;
-      
+
+      // Add relevant message with the associated error code 
       if (statusCode != null && STATUS_CODE_TO_ERROR_MESSAGE.containsKey(statusCode)) {
         finalErrorMessage = STATUS_CODE_TO_ERROR_MESSAGE.get(statusCode);
       }
