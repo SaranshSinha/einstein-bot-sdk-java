@@ -64,7 +64,7 @@ public class WebClientUtil {
     BodyExtractor<Mono<Error>, ReactiveHttpInputMessage> extractor = (inputMessage, context) -> {
       HttpHeaders headers = inputMessage.getHeaders();
       MediaType contentType = headers != null ? headers.getContentType() : null;
-      if (contentType != null && contentType.toString().contains("application/json")) {
+      if (contentType != null && contentType.toString().toLowerCase().contains("application/json")) {
         return BodyExtractors.toMono(Error.class)
                 .extract(inputMessage, context);
       } else {
