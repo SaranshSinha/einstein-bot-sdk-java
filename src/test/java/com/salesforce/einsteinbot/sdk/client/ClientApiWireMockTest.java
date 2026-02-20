@@ -407,7 +407,7 @@ public class ClientApiWireMockTest {
     );
   }
 
-   @Test
+  @Test
   public void test429ResponseWithNullContentType() {
     wireMock.stubFor(
         get(VERSIONS_URI)
