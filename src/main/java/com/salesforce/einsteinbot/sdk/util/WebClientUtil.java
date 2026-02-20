@@ -34,7 +34,6 @@ import reactor.core.publisher.Mono;
 public class WebClientUtil {
 
   private static final Logger logger = LoggerFactory.getLogger(WebClientUtil.class);
-  
   public static Mono<ClientRequest> createLoggingRequestProcessor(ClientRequest clientRequest) {
     logger.info("Making {} Request to URI {} with Headers : {}", clientRequest.method(),
         clientRequest.url(), maskAuthorizationHeader(clientRequest.headers()));
@@ -76,13 +75,12 @@ public class WebClientUtil {
 
   private static Mono<Error> buildErrorFromClientResponseBodyString(ReactiveHttpInputMessage clientResponse, BodyExtractor.Context context) {
      ClientHttpResponse response = (ClientHttpResponse) clientResponse;
-    Mono<String> bodyString = BodyExtractors.toMono(String.class).
+     Mono<String> bodyString = BodyExtractors.toMono(String.class).
             extract(clientResponse, context);
-    return bodyString.map(errorMessage -> new Error()
+     return bodyString.map(errorMessage -> new Error()
             .status(response.getRawStatusCode())
             .message("This Response content type is not 'application/json', " +
                     "See the 'error' field for actual error returned by the server.")
             .error(errorMessage));
   }
 }
-
