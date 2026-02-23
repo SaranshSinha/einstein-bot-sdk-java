@@ -407,4 +407,41 @@ public class ClientApiWireMockTest {
     );
   }
 
+  @Test
+  public void test429ResponseWithNullContentType() {
+    wireMock.stubFor(
+        get(VERSIONS_URI)
+            .willReturn(
+                aResponse()
+                    .withStatus(HttpStatus.TOO_MANY_REQUESTS.value())
+                    .withBody("Too many requests")
+            )
+    );
+
+    Throwable exceptionThrown = assertThrows(RuntimeException.class,
+        () -> client.getSupportedVersions());
+
+    ChatbotResponseException chatbotResponseException = validateAndGetCause(exceptionThrown,
+        ChatbotResponseException.class);
+    assertEquals(HttpStatus.TOO_MANY_REQUESTS.value(), chatbotResponseException.getStatus());
+  }
+
+  @Test
+  public void test200ResponseWithApplicationJsonContentType() throws Exception {
+    String responseBodyFile = "versionsResponse.json";
+    wireMock.stubFor(
+        get(VERSIONS_URI)
+            .willReturn(
+                aResponse()
+                    .withStatus(HttpStatus.OK.value())
+                    .withHeader("Content-Type", "application/json;charset=UTF-8")
+                    .withBodyFile(TEST_MOCK_DIR + responseBodyFile)
+            )
+    );
+
+    SupportedVersions versions = client.getSupportedVersions();
+
+    verifyResponseEnvelope(responseBodyFile, versions);
+  }
+
 }

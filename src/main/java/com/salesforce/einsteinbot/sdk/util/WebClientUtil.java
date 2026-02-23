@@ -14,6 +14,8 @@ import java.util.function.Function;
 import com.salesforce.einsteinbot.sdk.model.Error;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ReactiveHttpInputMessage;
 import org.springframework.http.client.reactive.ClientHttpResponse;
 import org.springframework.web.reactive.function.BodyExtractor;
@@ -32,7 +34,6 @@ import reactor.core.publisher.Mono;
 public class WebClientUtil {
 
   private static final Logger logger = LoggerFactory.getLogger(WebClientUtil.class);
-
   public static Mono<ClientRequest> createLoggingRequestProcessor(ClientRequest clientRequest) {
     logger.info("Making {} Request to URI {} with Headers : {}", clientRequest.method(),
         clientRequest.url(), maskAuthorizationHeader(clientRequest.headers()));
@@ -60,8 +61,9 @@ public class WebClientUtil {
 
   public static BodyExtractor<Mono<Error>, ReactiveHttpInputMessage> errorBodyExtractor() {
     BodyExtractor<Mono<Error>, ReactiveHttpInputMessage> extractor = (inputMessage, context) -> {
-      String contentType = inputMessage.getHeaders().getContentType().toString();
-      if (contentType.contains("application/json")) {
+      HttpHeaders headers = inputMessage.getHeaders();
+      MediaType contentType = headers != null ? headers.getContentType() : null;
+      if (contentType != null && contentType.toString().toLowerCase().contains("application/json")) {
         return BodyExtractors.toMono(Error.class)
                 .extract(inputMessage, context);
       } else {
@@ -72,10 +74,10 @@ public class WebClientUtil {
   }
 
   private static Mono<Error> buildErrorFromClientResponseBodyString(ReactiveHttpInputMessage clientResponse, BodyExtractor.Context context) {
-    ClientHttpResponse response = (ClientHttpResponse) clientResponse;
-    Mono<String> bodyString = BodyExtractors.toMono(String.class).
+     ClientHttpResponse response = (ClientHttpResponse) clientResponse;
+     Mono<String> bodyString = BodyExtractors.toMono(String.class).
             extract(clientResponse, context);
-    return bodyString.map(errorMessage -> new Error()
+     return bodyString.map(errorMessage -> new Error()
             .status(response.getRawStatusCode())
             .message("This Response content type is not 'application/json', " +
                     "See the 'error' field for actual error returned by the server.")
